@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica: pórtico de un vano con carga lateral (GH = 1)</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --card:#ffffff; --ink:#1d1d1b; --muted:#6b6a65; --line:#d9d6cc;
+    --beam:#2b2b28; --load:#d23c2f; --mp:#1f6fc5; --m1:#8a4fc7; --fin:#e08a00; --cg:#2f9a57;
+    --amp:rgba(31,111,197,.18); --am1:rgba(138,79,199,.18); --afin:rgba(224,138,0,.2);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#161614; --card:#1f1f1c; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3934;
+      --beam:#e2e0d8; --load:#ff6b5e; --mp:#5aa6ff; --m1:#c08bff; --fin:#ffb547; --cg:#5fd18b;
+      --amp:rgba(90,166,255,.2); --am1:rgba(192,139,255,.2); --afin:rgba(255,181,71,.22); }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 48px}
+  h1{font-size:1.35rem;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+  .new{border-left:4px solid var(--fin)}
+  svg{width:100%;max-width:560px;height:auto;display:block;margin:6px auto}
+  ol,ul{margin:6px 0 10px;padding-left:22px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"Ver ▾";font-size:.82rem;font-weight:500;color:var(--muted);white-space:nowrap}
+  details[open] summary::after{content:"Ocultar ▴"}
+  details[open] summary{border-bottom:1px solid var(--line)}
+  .body{padding:12px 16px}
+  .body p{margin:0 0 10px}
+  .eq{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.08rem;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0 12px;text-align:center;line-height:2.1}
+  .f{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.2}
+  .f>span:first-child{border-bottom:1.5px solid currentColor;padding:0 3px}
+  .mp{color:var(--mp);font-weight:600} .m1{color:var(--m1);font-weight:600} .fin{color:var(--fin);font-weight:600} .ld{color:var(--load);font-weight:600}
+  .tip{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin:6px 0 10px}
+  td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+  .pos{color:var(--cg);font-weight:700} .neg{color:var(--load);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Práctica: pórtico de un vano con carga lateral</h1>
+  <p class="sub">La misma forma que tu examen, con un apoyo más simple y sin momento concentrado. Intenta cada parte en papel antes de abrirla.</p>
+
+  <div class="card">
+    <p><b>Enunciado.</b> Aplicando el método de las fuerzas, calcule las reacciones y el diagrama de momento flector. EI constante. Dimensiones en metros.</p>
+    <ul>
+      <li>A es un <b>rodillo</b> (solo reacción vertical). D es un <b>empotramiento</b>.</li>
+      <li>Carga distribuida horizontal <span class="ld">w = 2 ton/m</span> hacia la derecha en toda la columna AB.</li>
+      <li>Carga horizontal <span class="ld">F = 4 ton</span> hacia la izquierda en el nudo C.</li>
+      <li>Columnas de 3 m y viga de 4 m.</li>
+    </ul>
+    <svg id="fig" viewBox="0 0 560 500"></svg>
+  </div>
+
+  <div class="card new">
+    <p><b>Diferencias con tu examen:</b></p>
+    <ul>
+      <li>Allá A es una <b>articulación</b> (GH = 2). Aquí es un <b>rodillo</b> (<b>GH = 1</b>).</li>
+      <li>No hay momento concentrado en C, y la viga mide 4 m en vez de 6 m.</li>
+      <li>Se mantiene lo importante: la carga distribuida en la columna (parábola) y la fuerza horizontal en C.</li>
+    </ul>
+  </div>
+
+  <details>
+    <summary><span>1. Grado de hiperestaticidad</span></summary>
+    <div class="body">
+      <div class="eq">GH = (1 rodillo + 3 empotramiento) − 3 = <b>1</b></div>
+      <p class="tip">En el examen: 2 (articulación) + 3 − 3 = 2.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>2. Sistema base y variable</span></summary>
+    <div class="body">
+      <p>Quitamos el rodillo en A. Queda el pórtico empotrado solo en D, con A colgando libre. Es isostático.</p>
+      <div class="eq"><span class="m1">X<sub>1</sub> = V<sub>A</sub></span> (supuesta ↑)</div>
+      <svg id="base" viewBox="0 0 560 500"></svg>
+      <p class="tip">Elegir quitar A tiene una ventaja: al cortar, siempre miras el pedazo que va hasta A, así que nunca necesitas las reacciones del empotramiento D.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>3. Ecuación canónica</span></summary>
+    <div class="body">
+      <div class="eq">δ<sub>11</sub>X<sub>1</sub> + Δ<sub>1P</sub> = 0 &nbsp;← A no se mueve en vertical</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>4. Diagrama M<sub>P</sub></span></summary>
+    <div class="body">
+      <p>Corta y mira el pedazo entre el corte y A (el extremo libre):</p>
+      <table>
+        <tr><th>Tramo</th><th>Cómo sale</th><th>Valor</th></tr>
+        <tr><td>AB (s desde A, hacia arriba)</td><td>carga w·s con brazo s/2 → w s²/2 = s². Parábola</td><td>0 → <b>9</b> en B (tracción afuera, izquierda)</td></tr>
+        <tr><td>BC (viga)</td><td>toda la carga de AB: resultante 6 ton a 1.5 m bajo la viga. Fuerza horizontal, así que el brazo es vertical: 1.5 m <b>constante</b></td><td><b>9 constante</b> (tracción arriba)</td></tr>
+        <tr><td>CD (y desde C, hacia abajo)</td><td>dos fuerzas horizontales: la resultante de w (6 ton →, a 1.5 m sobre A) y F (4 ton ←, en C). Brazos verticales. Se ve mejor por puntos (abajo)</td><td>C: <b>9</b> → D: <b>3</b> (afuera, derecha)</td></tr>
+      </table>
+      <p><b>CD por puntos:</b> en C solo actúa la resultante (F está justo en C, sin brazo), así que vale 9. En D la resultante de w queda 1.5 m <b>arriba</b> del corte (antes estaba abajo), así que su efecto cambió de lado: 6·1.5 = 9 hacia adentro. F está 3 m arriba: 4·3 = 12 hacia afuera. Neto: 12 − 9 = <b>3 afuera</b>. Entre C y D es una recta: M = 9 − 2y.</p>
+      <svg id="dmp" viewBox="0 0 560 500"></svg>
+      <p class="tip">En la viga sale un rectángulo, por lo mismo que viste en el pórtico escalonado: una fuerza horizontal tiene el mismo brazo para todos los puntos de una barra horizontal.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>5. Diagrama M<sub>1</sub> (1 ↑ en A)</span></summary>
+    <div class="body">
+      <table>
+        <tr><td>AB</td><td>la fuerza va por el eje de la columna: brazo 0</td><td><b>0</b></td></tr>
+        <tr><td>BC</td><td>brazo horizontal x desde B</td><td>triángulo 0 → <b>4</b> (tracción adentro, abajo)</td></tr>
+        <tr><td>CD</td><td>brazo horizontal 4 m, constante</td><td>rectángulo <b>4</b> (tracción adentro, izquierda)</td></tr>
+      </table>
+      <svg id="dm1" viewBox="0 0 560 500"></svg>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>6. Coeficientes</span></summary>
+    <div class="body">
+      <p><b>δ<sub>11</sub></b>:</p>
+      <div class="eq">BC: ½·4·4·(⅔·4) = ${'F643'} &nbsp;&nbsp; CD: (4·3)·4 = 48 &nbsp;⇒&nbsp; δ<sub>11</sub> = ${'F2083'} ≈ 69.33</div>
+      <p><b>Δ<sub>1P</sub></b>. M<sub>P</sub> está afuera y M<sub>1</sub> adentro, así que todo sale <b>negativo</b>:</p>
+      <table>
+        <tr><th>Tramo</th><th>Cálculo</th><th>Aporte</th></tr>
+        <tr><td>AB</td><td>M<sub>1</sub> = 0. La parábola no aporta</td><td>0</td></tr>
+        <tr><td>BC</td><td>área de M<sub>1</sub> = 8 (triángulo) × M<sub>P</sub> = 9 (constante) = 72</td><td class="neg">−72</td></tr>
+        <tr><td>CD</td><td>área de M<sub>P</sub> = ½(9 + 3)·3 = 18 (trapecio) × M<sub>1</sub> = 4 (constante) = 72</td><td class="neg">−72</td></tr>
+        <tr><th colspan="2">Total</th><th class="neg">−144</th></tr>
+      </table>
+      <p class="tip">Truco de Vereshchagin: cuando uno de los dos diagramas es <b>constante</b> en el tramo, toma el área del otro y multiplícala por esa constante. No necesitas centroides.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>7. Resolver X<sub>1</sub> y las reacciones</span></summary>
+    <div class="body">
+      <div class="eq">${'F2083'} X<sub>1</sub> − 144 = 0 &nbsp;⇒&nbsp; X<sub>1</sub> = ${'XF'} = <b>${'F2713'} ≈ 2.08 ton ↑</b></div>
+      <p><b>Reacciones</b> (las pide el enunciado):</p>
+      <table>
+        <tr><td>V<sub>A</sub></td><td>= X<sub>1</sub></td><td><b>2.08 ton ↑</b></td></tr>
+        <tr><td>V<sub>D</sub></td><td>ΣFy: V<sub>A</sub> + V<sub>D</sub> = 0</td><td><b>2.08 ton ↓</b></td></tr>
+        <tr><td>H<sub>D</sub></td><td>ΣFx: 6 (de w) − 4 (F) + H<sub>D</sub> = 0</td><td><b>2 ton ←</b></td></tr>
+        <tr><td>M<sub>D</sub></td><td>ΣM respecto a D</td><td><b>5.31 ton·m</b></td></tr>
+      </table>
+      <p class="tip">V<sub>A</sub> y V<sub>D</sub> forman un par: las cargas son solo horizontales, pero el pórtico "se quiere volcar", y el par de reacciones verticales lo frena junto con M<sub>D</sub>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>8. Diagrama final M = M<sub>P</sub> + X<sub>1</sub>·M<sub>1</sub></span></summary>
+    <div class="body">
+      <p>Convención para sumar: afuera +, adentro −.</p>
+      <table>
+        <tr><th>Punto</th><th>M<sub>P</sub></th><th>X<sub>1</sub>·M<sub>1</sub></th><th>M final</th></tr>
+        <tr><td>A</td><td>0</td><td>0</td><td><b>0</b></td></tr>
+        <tr><td>B</td><td>9</td><td>0</td><td><b>9</b> (afuera)</td></tr>
+        <tr><td>C</td><td>9</td><td>2.08·(−4) = −8.31</td><td><b>0.69</b> (afuera)</td></tr>
+        <tr><td>D</td><td>3</td><td>−8.31</td><td><b>−5.31</b> (adentro)</td></tr>
+      </table>
+      <ul>
+        <li><b>AB:</b> queda igual que M<sub>P</sub> (parábola de 0 a 9), porque M<sub>1</sub> = 0 ahí.</li>
+        <li><b>BC:</b> recta de 9 a 0.69, toda arriba.</li>
+        <li><b>CD:</b> M = 0.69 − 2y. Cambia de signo a <b>0.35 m bajo C</b> y llega a 5.31 adentro en D.</li>
+      </ul>
+      <svg id="dfin" viewBox="0 0 560 500"></svg>
+      <p class="tip">M en D (5.31) coincide con la reacción M<sub>D</sub> del paso 7. Ese es un buen chequeo.</p>
+    </div>
+  </details>
+
+  <div class="card">
+    <p><b>Para pasar al examen:</b></p>
+    <ul>
+      <li>Cambia el rodillo por una articulación. Aparece X<sub>2</sub> = H<sub>A</sub>, y M<sub>2</sub> (1 horizontal en A) es un triángulo en AB (0 → 3), un rectángulo de 3 en la viga y otro triángulo en CD (3 → 0), porque A y D están a la misma altura.</li>
+      <li>El momento concentrado en C solo agrega un "salto" en M<sub>P</sub>: a partir de C, todo el tramo CD lleva ese momento sumado (constante).</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const F=(a,b)=>`<span class="f"><span>${a}</span><span>${b}</span></span>`;
+const R={F643:F('64','3'),F2083:F('208','3'),XF:F('144 · 3','208'),F2713:F('27','13')};
+document.querySelectorAll('.body').forEach(b=>{ b.innerHTML=b.innerHTML.replace(/\$\{'(\w+)'\}/g,(m,k)=>R[k]||m); });
+
+const S=60; const A=[160,420], B=[160,240], C=[400,240], D=[400,420];
+function el(svg,tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;}
+function text(svg,x,y,s,a={}){const e=el(svg,'text',Object.assign({x,y,'font-size':14,fill:css('--ink'),'font-family':'system-ui,sans-serif'},a));e.textContent=s;return e;}
+function arrow(svg,x1,y1,x2,y2,color,label,lx,ly,w=3){
+  el(svg,'line',{x1,y1,x2,y2,stroke:color,'stroke-width':w});
+  const a=Math.atan2(y2-y1,x2-x1), h=w>2?10:6;
+  el(svg,'path',{d:`M${x2-h*Math.cos(a-0.5)},${y2-h*Math.sin(a-0.5)} L${x2},${y2} L${x2-h*Math.cos(a+0.5)},${y2-h*Math.sin(a+0.5)}`,fill:'none',stroke:color,'stroke-width':w});
+  if(label) text(svg,lx,ly,label,{fill:color,'font-weight':700,'font-size':15});
+}
+function frame(svg,{roller=true,op=1}={}){
+  const g=el(svg,'g',{opacity:op});
+  el(g,'polyline',{points:`${A} ${B} ${C} ${D}`,fill:'none',stroke:css('--beam'),'stroke-width':6,'stroke-linejoin':'round','stroke-linecap':'round'});
+  el(g,'line',{x1:D[0]-30,y1:D[1],x2:D[0]+30,y2:D[1],stroke:css('--beam'),'stroke-width':3});
+  for(let i=-28;i<=22;i+=9) el(g,'line',{x1:D[0]+i,y1:D[1],x2:D[0]+i-8,y2:D[1]+11,stroke:css('--muted'),'stroke-width':1.4});
+  if(roller){
+    el(g,'polygon',{points:`${A[0]},${A[1]+3} ${A[0]-13},${A[1]+23} ${A[0]+13},${A[1]+23}`,fill:'none',stroke:css('--beam'),'stroke-width':2.5});
+    el(g,'circle',{cx:A[0]-7,cy:A[1]+29,r:5,fill:'none',stroke:css('--beam'),'stroke-width':2});
+    el(g,'circle',{cx:A[0]+7,cy:A[1]+29,r:5,fill:'none',stroke:css('--beam'),'stroke-width':2});
+    el(g,'line',{x1:A[0]-22,y1:A[1]+37,x2:A[0]+22,y2:A[1]+37,stroke:css('--muted'),'stroke-width':1.5});
+  }
+  text(g,A[0]+12,A[1]-4,'A',{'font-weight':700,'font-size':16});
+  text(g,B[0]+10,B[1]+22,'B',{'font-weight':700,'font-size':16});
+  text(g,C[0]-22,C[1]+22,'C',{'font-weight':700,'font-size':16});
+  text(g,D[0]-22,D[1]-8,'D',{'font-weight':700,'font-size':16});
+}
+function dims(svg){
+  const m=css('--muted');
+  el(svg,'line',{x1:B[0],y1:D[1]+60,x2:C[0],y2:D[1]+60,stroke:m,'stroke-width':1.3});
+  [B[0],C[0]].forEach(x=>el(svg,'line',{x1:x,y1:D[1]+54,x2:x,y2:D[1]+66,stroke:m,'stroke-width':1.3}));
+  text(svg,(B[0]+C[0])/2-12,D[1]+54,'4 m',{fill:m,'font-size':13,'font-weight':700});
+  el(svg,'line',{x1:500,y1:C[1],x2:500,y2:D[1],stroke:m,'stroke-width':1.3});
+  [C[1],D[1]].forEach(y=>el(svg,'line',{x1:494,y1:y,x2:506,y2:y,stroke:m,'stroke-width':1.3}));
+  text(svg,508,(C[1]+D[1])/2+5,'3 m',{fill:m,'font-size':13,'font-weight':700});
+}
+function loads(svg,op=1){
+  const g=el(svg,'g',{opacity:op});
+  for(let i=0;i<=9;i++){const y=B[1]+i*20; arrow(g,B[0]-36,y,B[0]-5,y,css('--load'),'',0,0,1.6);}
+  el(g,'line',{x1:B[0]-36,y1:B[1],x2:B[0]-36,y2:A[1],stroke:css('--load'),'stroke-width':1.6});
+  text(g,B[0]-140,(B[1]+A[1])/2,'w = 2 ton/m',{fill:css('--load'),'font-weight':700,'font-size':14});
+  arrow(g,C[0]+70,C[1],C[0]+5,C[1],css('--load'),'F = 4 ton',C[0]+20,C[1]-12);
+}
+function diag(svg,p0,p1,n,pts,k,color,fill){
+  const at=t=>[p0[0]+(p1[0]-p0[0])*t, p0[1]+(p1[1]-p0[1])*t];
+  const poly=[at(0)]; pts.forEach(([t,v])=>{const q=at(t); poly.push([q[0]+v*k*n[0], q[1]+v*k*n[1]]);}); poly.push(at(1));
+  el(svg,'polygon',{points:poly.map(q=>q.join(',')).join(' '),fill,stroke:color,'stroke-width':2.5,'stroke-linejoin':'round'});
+}
+const samp=(f,n=40)=>Array.from({length:n+1},(_,i)=>[i/n,f(i/n)]);
+// normales "afuera": AB izquierda, BC arriba, CD derecha
+const OUT_AB=[-1,0], OUT_BC=[0,-1], OUT_CD=[1,0];
+
+const fig=document.getElementById('fig'); frame(fig); loads(fig); dims(fig);
+text(fig,235,350,'EI constante',{fill:css('--muted')});
+const base=document.getElementById('base'); frame(base,{roller:false}); loads(base,.45);
+arrow(base,A[0],A[1]+60,A[0],A[1]+5,css('--m1'),'X₁',A[0]+8,A[1]+45);
+
+const kP=7;
+const dmp=document.getElementById('dmp'); frame(dmp,{roller:false,op:.45}); loads(dmp,.3);
+diag(dmp,A,B,OUT_AB,samp(t=>(3*t)**2),kP,css('--mp'),css('--amp'));
+diag(dmp,B,C,OUT_BC,[[0,9],[1,9]],kP,css('--mp'),css('--amp'));
+diag(dmp,C,D,OUT_CD,[[0,9],[1,3]],kP,css('--mp'),css('--amp'));
+text(dmp,B[0]-82,B[1]-6,'9',{fill:css('--mp'),'font-weight':700});
+text(dmp,(B[0]+C[0])/2,B[1]-70,'9',{fill:css('--mp'),'font-weight':700});
+text(dmp,C[0]+70,C[1]+20,'9',{fill:css('--mp'),'font-weight':700});
+text(dmp,D[0]+28,D[1]-4,'3',{fill:css('--mp'),'font-weight':700});
+text(dmp,230,350,'MP (ton·m)',{fill:css('--mp'),'font-weight':700,'font-size':16});
+text(dmp,230,370,'todo afuera',{fill:css('--muted'),'font-size':13});
+
+const k1=12;
+const dm1=document.getElementById('dm1'); frame(dm1,{roller:false,op:.45});
+arrow(dm1,A[0],A[1]+60,A[0],A[1]+5,css('--m1'),'1',A[0]+8,A[1]+45);
+diag(dm1,B,C,OUT_BC,[[0,0],[1,-4]],k1,css('--m1'),css('--am1'));
+diag(dm1,C,D,OUT_CD,[[0,-4],[1,-4]],k1,css('--m1'),css('--am1'));
+text(dm1,C[0]-20,C[1]+64,'4',{fill:css('--m1'),'font-weight':700});
+text(dm1,C[0]-66,(C[1]+D[1])/2,'4',{fill:css('--m1'),'font-weight':700});
+text(dm1,210,350,'M1 (m)',{fill:css('--m1'),'font-weight':700,'font-size':16});
+text(dm1,210,370,'AB = 0, todo adentro',{fill:css('--muted'),'font-size':13});
+
+const X=27/13, kf=7;
+const dfin=document.getElementById('dfin'); frame(dfin,{op:.45});
+diag(dfin,A,B,OUT_AB,samp(t=>(3*t)**2),kf,css('--fin'),css('--afin'));
+diag(dfin,B,C,OUT_BC,[[0,9],[1,9-4*X]],kf,css('--fin'),css('--afin'));
+const z=(9-4*X)/2/3;
+diag(dfin,C,D,OUT_CD,[[0,9-4*X],[z,0],[1,3-4*X]],kf,css('--fin'),css('--afin'));
+text(dfin,B[0]-82,B[1]-6,'9',{fill:css('--fin'),'font-weight':700});
+text(dfin,B[0]+6,B[1]-70,'9',{fill:css('--fin'),'font-weight':700});
+text(dfin,C[0]+8,C[1]-14,'0.69',{fill:css('--fin'),'font-weight':700});
+text(dfin,D[0]-80,D[1]-4,'5.31',{fill:css('--fin'),'font-weight':700});
+el(dfin,'circle',{cx:D[0],cy:C[1]+z*180,r:4,fill:css('--ink')});
+text(dfin,D[0]+10,C[1]+z*180+16,'0 (0.35 m bajo C)',{fill:css('--muted'),'font-size':12});
+text(dfin,215,350,'M final (ton·m)',{fill:css('--fin'),'font-weight':700,'font-size':16});
+</script>
+</body>
+</html>

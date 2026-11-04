@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica nivel 3.5: biempotrado con carga en la columna (GH = 3)</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --card:#ffffff; --ink:#1d1d1b; --muted:#6b6a65; --line:#d9d6cc;
+    --beam:#2b2b28; --load:#d23c2f; --mp:#1f6fc5; --m1:#8a4fc7; --m2:#2f9a57; --fin:#e08a00; --m3:#c2410c; --am3:rgba(194,65,12,.15);
+    --amp:rgba(31,111,197,.18); --am1:rgba(138,79,199,.18); --am2:rgba(47,154,87,.18); --afin:rgba(224,138,0,.2);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#161614; --card:#1f1f1c; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3934;
+      --beam:#e2e0d8; --load:#ff6b5e; --mp:#5aa6ff; --m1:#c08bff; --m2:#5fd18b; --fin:#ffb547; --m3:#ff8a5c; --am3:rgba(255,138,92,.18);
+      --amp:rgba(90,166,255,.2); --am1:rgba(192,139,255,.2); --am2:rgba(95,209,139,.2); --afin:rgba(255,181,71,.22); }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 48px}
+  h1{font-size:1.35rem;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+  .new{border-left:4px solid var(--fin)}
+  svg{width:100%;max-width:540px;height:auto;display:block;margin:6px auto}
+  ol,ul{margin:6px 0 10px;padding-left:22px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"Ver ▾";font-size:.82rem;font-weight:500;color:var(--muted);white-space:nowrap}
+  details[open] summary::after{content:"Ocultar ▴"}
+  details[open] summary{border-bottom:1px solid var(--line)}
+  .body{padding:12px 16px}
+  .body p{margin:0 0 10px}
+  .eq{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.08rem;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0 12px;text-align:center;line-height:2.1}
+  .f{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.2}
+  .f>span:first-child{border-bottom:1.5px solid currentColor;padding:0 3px}
+  .mp{color:var(--mp);font-weight:600} .m1{color:var(--m1);font-weight:600} .m2{color:var(--m2);font-weight:600} .fin{color:var(--fin);font-weight:600} .m3{color:var(--m3);font-weight:600} .ld{color:var(--load);font-weight:600}
+  .tip{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin:6px 0 10px}
+  td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+  .pos{color:var(--m2);font-weight:700} .neg{color:var(--load);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Práctica nivel 3.5: biempotrado con carga en la columna</h1>
+  <p class="sub">Las mismas cargas del nivel 2.5, pero con D empotrado: ya es el mismo tipo que tu examen. Intenta cada parte en papel antes de abrirla.</p>
+
+  <div class="card">
+    <p><b>Enunciado.</b> Obtener el diagrama de momentos flectores, debidamente acotado, del pórtico mostrado mediante el método de las fuerzas. A y D son <b>empotramientos</b>. Todas las barras tienen EI constante. Desprecia las deformaciones axiales y por cortante.</p>
+    <ul>
+      <li>Carga distribuida horizontal <span class="ld">w = 2 kN/m</span> hacia la derecha en toda la columna AB.</li>
+      <li>Carga puntual <span class="ld">P = 10 kN</span> hacia abajo en el centro de la viga BC.</li>
+    </ul>
+    <svg id="fig" viewBox="0 0 540 480"></svg>
+  </div>
+
+  <div class="card new">
+    <p><b>Qué sube respecto al nivel 2.5:</b></p>
+    <ul>
+      <li>D empotrado: <b>3 redundantes</b> (H<sub>D</sub>, V<sub>D</sub>, M<sub>D</sub>) y un sistema de 3×3.</li>
+      <li>Combina todo lo anterior: parábola en la columna (Simpson), carga puntual en la viga y el estado M<sub>3</sub>.</li>
+      <li>El diagrama final tiene <b>varios cambios de signo</b>, uno de ellos muy cerca de cero. Hay que ser cuidadoso con los decimales.</li>
+    </ul>
+    <p class="tip">M<sub>P</sub>, M<sub>1</sub>, M<sub>2</sub> y sus coeficientes son los mismos del nivel 2.5. Si ya lo hiciste, solo te faltan M<sub>3</sub> y 4 coeficientes.</p>
+  </div>
+
+  <details>
+    <summary><span>1. Grado de hiperestaticidad</span></summary>
+    <div class="body">
+      <div class="eq">GH = (3 + 3) − 3 = <b>3</b></div>
+      <p>Dos empotramientos − 3 ecuaciones.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>2. Sistema base y variables</span></summary>
+    <div class="body">
+      <p>Liberamos el empotramiento D (queda libre). Las incógnitas son <span class="m1">X<sub>1</sub> = H<sub>D</sub> (→)</span>, <span class="m2">X<sub>2</sub> = V<sub>D</sub> (↑)</span> y <span class="m3">X<sub>3</sub> = M<sub>D</sub> (supuesto antihorario ↺)</span>.</p>
+      <svg id="base" viewBox="0 0 540 480"></svg>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>3. Ecuaciones canónicas</span></summary>
+    <div class="body">
+      <div class="eq">
+        δ<sub>11</sub>X<sub>1</sub> + δ<sub>12</sub>X<sub>2</sub> + δ<sub>13</sub>X<sub>3</sub> + Δ<sub>1P</sub> = 0 &nbsp;← D no se mueve en horizontal<br>
+        δ<sub>21</sub>X<sub>1</sub> + δ<sub>22</sub>X<sub>2</sub> + δ<sub>23</sub>X<sub>3</sub> + Δ<sub>2P</sub> = 0 &nbsp;← D no se mueve en vertical<br>
+        δ<sub>31</sub>X<sub>1</sub> + δ<sub>32</sub>X<sub>2</sub> + δ<sub>33</sub>X<sub>3</sub> + Δ<sub>3P</sub> = 0 &nbsp;← D no gira</div>
+      <p>La tercera ecuación es nueva: el empotramiento también impide que D <b>gire</b>.</p>
+      <p class="tip">Por Maxwell: δ<sub>12</sub> = δ<sub>21</sub>, δ<sub>13</sub> = δ<sub>31</sub>, δ<sub>23</sub> = δ<sub>32</sub>. Solo calculas 6 coeficientes δ y 3 Δ.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>4. Diagrama M<sub>P</sub> (aquí está lo nuevo)</span></summary>
+    <div class="body">
+      <p><b>Tramo DC:</b> no hay cargas entre el corte y D, así que M = 0.</p>
+      <p><b>Tramo CB:</b> de C al centro no hay cargas (0). Del centro a B actúa P con brazo horizontal de 0 a 2 m, y en B vale 10·2 = <b>20</b> (tracción arriba).</p>
+      <p><b>Tramo BA (columna):</b> corta a una distancia s <b>debajo de B</b>. Sobre el pedazo (de B al corte y todo lo que va hasta D) actúan dos cosas:</p>
+      <ul>
+        <li><b>P:</b> fuerza vertical, brazo horizontal de 2 m. Aporta <b>20 constante</b>.</li>
+        <li><b>La distribuida entre B y el corte:</b> resultante w·s = 2s, aplicada en la mitad, a s/2 por encima del corte. Brazo <b>vertical</b> s/2:</li>
+      </ul>
+      <div class="eq"><span class="mp">M = 20 + (2s)·${'S2'} = 20 + s²</span> &nbsp;→&nbsp; B: <b>20</b>, A: 20 + 16 = <b>36</b></div>
+      <p>Las dos traccionan la cara izquierda (exterior). Por el s², el diagrama de la columna es una <b>parábola</b>: plana cerca de B y empinada cerca de A.</p>
+      <svg id="dmp" viewBox="0 0 540 480"></svg>
+      <p class="tip">En el centro de AB (s = 2): M = 20 + 4 = <b>24</b>, no 28 (que es el promedio de 20 y 36). Lo vas a necesitar para Simpson.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>5. Diagrama M<sub>1</sub> (1 → en D)</span></summary>
+    <div class="body">
+      <p>Brazo = distancia vertical a D (que está 2 m sobre la viga).</p>
+      <table>
+        <tr><td>DC</td><td>triángulo 0 → <b>2</b> (izquierda)</td></tr>
+        <tr><td>CB</td><td>rectángulo <b>2</b> (arriba)</td></tr>
+        <tr><td>BA</td><td>trapecio 2 → <b>6</b> (izquierda)</td></tr>
+      </table>
+      <svg id="dm1" viewBox="0 0 540 480"></svg>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>6. Diagrama M<sub>2</sub> (1 ↑ en D)</span></summary>
+    <div class="body">
+      <p>Brazo = distancia horizontal a D.</p>
+      <table>
+        <tr><td>DC</td><td><b>0</b> (misma vertical que D)</td></tr>
+        <tr><td>CB</td><td>triángulo 0 → <b>4</b> (abajo)</td></tr>
+        <tr><td>BA</td><td>rectángulo <b>4</b> (derecha)</td></tr>
+      </table>
+      <svg id="dm2" viewBox="0 0 540 480"></svg>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>7. Diagrama M<sub>3</sub> (momento 1 ↺ en D): lo nuevo</span></summary>
+    <div class="body">
+      <p>Un <b>momento</b> aplicado en el extremo libre no tiene brazo: es un par, y llega igual a cualquier corte. Por eso:</p>
+      <div class="eq"><span class="m3">M<sub>3</sub> = 1 en toda la estructura</span></div>
+      <p>Es un rectángulo de altura 1 en las tres barras. ¿De qué lado? Un momento antihorario en D curva la columna CD de modo que se estira su cara derecha (interior). Por el nudo rígido, eso pasa a la cara de abajo de la viga y a la derecha de AB. Es todo <b>interior</b>.</p>
+      <svg id="dm3" viewBox="0 0 540 480"></svg>
+      <p class="tip">Como M<sub>3</sub> es constante, cualquier producto con él es simplemente el <b>área del otro diagrama × 1</b>. Son los coeficientes más fáciles.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>8. Coeficientes</span></summary>
+    <div class="body">
+      <p><b>δ (no dependen de las cargas):</b> la geometría es la del nivel 1, así que salen iguales.</p>
+      <table>
+        <tr><th>Coef.</th><th>DC</th><th>CB</th><th>BA</th><th>Total</th></tr>
+        <tr><td>δ<sub>11</sub></td><td>½·2·2·(⅔·2) = 8/3</td><td>(2·4)·2 = 16</td><td>trap 2→6 ² = 208/3</td><td><b>88</b></td></tr>
+        <tr><td>δ<sub>22</sub></td><td>0</td><td>½·4·4·(⅔·4) = 64/3</td><td>(4·4)·4 = 64</td><td><b>256/3</b></td></tr>
+        <tr><td>δ<sub>12</sub></td><td>0</td><td>(½·4·4)·2 = 16</td><td>(4·4)·4 = 64</td><td class="neg">−80</td></tr>
+      </table>
+      <p><b>Δ (con M<sub>P</sub>):</b></p>
+      <table>
+        <tr><th>Coef.</th><th>CB (triángulo de P)</th><th>BA (parábola, Simpson)</th><th>Total</th></tr>
+        <tr><td>Δ<sub>1P</sub></td><td>(½·2·20)·2 = 40</td><td>1280/3 ≈ 426.67</td><td class="pos">+1400/3 ≈ 466.67</td></tr>
+        <tr><td>Δ<sub>2P</sub></td><td>(½·2·20)·(10/3) = 200/3</td><td>1216/3 ≈ 405.33</td><td class="neg">−472</td></tr>
+      </table>
+      <p><b>Simpson en la columna</b> (valores en B, centro y A):</p>
+      <table>
+        <tr><th></th><th>B</th><th>centro</th><th>A</th><th>${'L6'}(f<sub>B</sub> + 4f<sub>m</sub> + f<sub>A</sub>)</th></tr>
+        <tr><td>M<sub>P</sub></td><td>20</td><td><b>24</b></td><td>36</td><td></td></tr>
+        <tr><td>M<sub>1</sub></td><td>2</td><td>4</td><td>6</td><td></td></tr>
+        <tr><td>M<sub>P</sub>·M<sub>1</sub></td><td>40</td><td>96</td><td>216</td><td>${'L6'}(40 + 384 + 216) = <b>1280/3</b></td></tr>
+        <tr><td>M<sub>P</sub>·M<sub>2</sub> (M<sub>2</sub> = 4)</td><td>80</td><td>96</td><td>144</td><td>${'L6'}(80 + 384 + 144) = <b>1216/3</b></td></tr>
+      </table>
+      <p><b>Signos:</b> M<sub>P</sub> y M<sub>1</sub> están del mismo lado (exterior), así que Δ<sub>1P</sub> es +. M<sub>P</sub> y M<sub>2</sub> están en lados opuestos, así que Δ<sub>2P</sub> es −.</p>
+      <p class="tip">Para Δ<sub>2P</sub> en BA también sirve Vereshchagin, porque M<sub>2</sub> es constante: área de la parábola × 4. El área es ∫(20 + s²)ds = 80 + 64/3 = 304/3, y por 4 da 1216/3 ✓.</p>
+      <p><b>Los nuevos, con M<sub>3</sub> = 1 (interior):</b> cada uno es el <b>área</b> del otro diagrama, con su signo.</p>
+      <table>
+        <tr><th>Coef.</th><th>DC (2 m)</th><th>CB (4 m)</th><th>BA (4 m)</th><th>Total</th></tr>
+        <tr><td>δ<sub>33</sub></td><td>2</td><td>4</td><td>4</td><td class="pos">+10</td></tr>
+        <tr><td>δ<sub>13</sub></td><td>½·2·2 = 2</td><td>2·4 = 8</td><td>½(2+6)·4 = 16</td><td class="neg">−26</td></tr>
+        <tr><td>δ<sub>23</sub></td><td>0</td><td>½·4·4 = 8</td><td>4·4 = 16</td><td class="pos">+24</td></tr>
+        <tr><td>Δ<sub>3P</sub></td><td>0</td><td>½·2·20 = 20</td><td>∫(20 + s²)ds = 304/3</td><td class="neg">−364/3 ≈ −121.33</td></tr>
+      </table>
+      <p class="tip">Área de la parábola de la columna: un rectángulo de 20 × 4 = 80 más la "panza" de ⅓·4·16 = 64/3. O con Simpson: ${'L6'}(20 + 4·24 + 36) = ${'L6'}·152 = 304/3.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>9. Resolver el sistema 3×3</span></summary>
+    <div class="body">
+      <div class="eq">${'SYS35'}</div>
+      <p>Multiplica las tres ecuaciones por 3 para quitar fracciones:</p>
+      <div class="eq">264X<sub>1</sub> − 240X<sub>2</sub> − 78X<sub>3</sub> = −1400<br>
+      −240X<sub>1</sub> + 256X<sub>2</sub> + 72X<sub>3</sub> = 1416<br>
+      −78X<sub>1</sub> + 72X<sub>2</sub> + 30X<sub>3</sub> = 364</div>
+      <div class="eq"><span class="m1">X<sub>1</sub> = −79/20 = −3.95 kN</span> &nbsp; <span class="m2">X<sub>2</sub> = 321/80 ≈ 4.01 kN</span> &nbsp; <span class="m3">X<sub>3</sub> = −233/30 ≈ −7.77 kN·m</span></div>
+      <table>
+        <tr><td>H<sub>D</sub></td><td><b>3.95 kN ←</b></td></tr>
+        <tr><td>V<sub>D</sub></td><td><b>4.01 kN ↑</b></td></tr>
+        <tr><td>M<sub>D</sub></td><td><b>7.77 kN·m horario ↻</b></td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span>10. Diagrama final</span></summary>
+    <div class="body">
+      <p>M = M<sub>P</sub> + X<sub>1</sub>M<sub>1</sub> + X<sub>2</sub>M<sub>2</sub> + X<sub>3</sub>M<sub>3</sub>, con negativo = exterior.</p>
+      <table>
+        <tr><th>Punto</th><th>M<sub>P</sub></th><th>X<sub>1</sub>M<sub>1</sub></th><th>X<sub>2</sub>M<sub>2</sub></th><th>X<sub>3</sub></th><th>M final</th></tr>
+        <tr><td>D</td><td>0</td><td>0</td><td>0</td><td>−7.77</td><td><b>−7.77</b> (ext.)</td></tr>
+        <tr><td>C</td><td>0</td><td>(−3.95)(−2) = +7.90</td><td>0</td><td>−7.77</td><td><b>0.13</b> (int.)</td></tr>
+        <tr><td>Bajo P</td><td>0</td><td>+7.90</td><td>(4.01)(2) = +8.03</td><td>−7.77</td><td><b>8.16</b> (abajo)</td></tr>
+        <tr><td>B</td><td>−20</td><td>+7.90</td><td>(4.01)(4) = +16.05</td><td>−7.77</td><td><b>−3.82</b> (ext.)</td></tr>
+        <tr><td>Centro AB</td><td>−24</td><td>(−3.95)(−4) = +15.80</td><td>+16.05</td><td>−7.77</td><td><b>0.08</b> (int.)</td></tr>
+        <tr><td>A</td><td>−36</td><td>(−3.95)(−6) = +23.70</td><td>+16.05</td><td>−7.77</td><td><b>−4.02</b> (ext.)</td></tr>
+      </table>
+      <p><b>Ceros:</b></p>
+      <ul>
+        <li>DC: casi en C, a 1.97 m bajo D.</li>
+        <li>Viga: a 0.64 m de B (entre P y B).</li>
+        <li>Columna AB: M = −3.82 + 3.95s − s². Sube hasta +0.08 a 1.98 m bajo B y vuelve a bajar. Cruza cero dos veces: a 1.69 m y a 2.26 m bajo B.</li>
+      </ul>
+      <svg id="dfin" viewBox="0 0 540 480"></svg>
+      <p class="tip">Chequeo: ΣFx: 8 − 3.95 − H<sub>A</sub> = 0, entonces H<sub>A</sub> = 4.05 kN ←. ΣFy: V<sub>A</sub> = 10 − 4.01 = 5.99 kN ↑. El máximo de la parábola de AB está donde el cortante es 0: V = 3.95 − 2s = 0, o sea s = 1.98 m ✓.</p>
+    </div>
+  </details>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const F=(a,b)=>`<span class="f"><span>${a}</span><span>${b}</span></span>`;
+// reemplazos de fracciones
+const R={SYS35:`88X<sub>1</sub> − 80X<sub>2</sub> − 26X<sub>3</sub> + ${F('1400','3')} = 0<br>−80X<sub>1</sub> + ${F('256','3')}X<sub>2</sub> + 24X<sub>3</sub> − 472 = 0<br>−26X<sub>1</sub> + 24X<sub>2</sub> + 10X<sub>3</sub> − ${F('364','3')} = 0`,SYS25:`88X<sub>1</sub> − 80X<sub>2</sub> + ${F('1400','3')} = 0<br>−80X<sub>1</sub> + ${F('256','3')}X<sub>2</sub> − 472 = 0`,S2:F('s','2'),WS2:F('w s²','2'),B24:F('3·4²','2'),L6:F('4','6'),
+ SYS:`${F('451','3')}X<sub>1</sub> − 104X<sub>2</sub> + 848 = 0<br>−104X<sub>1</sub> + ${F('256','3')}X<sub>2</sub> − 672 = 0`,
+ DMDS:`${F('dM','ds')} = −3s + 6.38 = 0 &nbsp;⇒&nbsp; s = 2.13 m de C &nbsp;⇒&nbsp; <b>M<sub>máx</sub> ≈ 10.47 kN·m</b> (abajo)`};
+document.querySelectorAll('.body').forEach(b=>{ b.innerHTML=b.innerHTML.replace(/\$\{'(\w+)'\}/g,(m,k)=>R[k]||m); });
+
+const S=50; const A=[170,440], B=[170,240], C=[370,240], D=[370,140];
+const MEM={DC:[D,C,[-1,0]], CB:[C,B,[0,-1]], BA:[B,A,[-1,0]]};
+
+function el(svg,tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;}
+function text(svg,x,y,s,a={}){const e=el(svg,'text',Object.assign({x,y,'font-size':14,fill:css('--ink'),'font-family':'system-ui,sans-serif'},a));e.textContent=s;return e;}
+function arrow(svg,x1,y1,x2,y2,color,label,lx,ly,w=3){
+  el(svg,'line',{x1,y1,x2,y2,stroke:color,'stroke-width':w});
+  const a=Math.atan2(y2-y1,x2-x1), h=w>2?10:6;
+  el(svg,'path',{d:`M${x2-h*Math.cos(a-0.5)},${y2-h*Math.sin(a-0.5)} L${x2},${y2} L${x2-h*Math.cos(a+0.5)},${y2-h*Math.sin(a+0.5)}`,fill:'none',stroke:color,'stroke-width':w});
+  if(label) text(svg,lx,ly,label,{fill:color,'font-weight':700,'font-size':15});
+}
+function frame(svg,{pin=true,op=1}={}){
+  const g=el(svg,'g',{opacity:op});
+  el(g,'polyline',{points:`${A} ${B} ${C} ${D}`,fill:'none',stroke:css('--beam'),'stroke-width':6,'stroke-linejoin':'round','stroke-linecap':'round'});
+  el(g,'line',{x1:A[0]-28,y1:A[1],x2:A[0]+28,y2:A[1],stroke:css('--beam'),'stroke-width':3});
+  for(let i=-26;i<=20;i+=9) el(g,'line',{x1:A[0]+i,y1:A[1],x2:A[0]+i-8,y2:A[1]+11,stroke:css('--muted'),'stroke-width':1.4});
+  if(pin){
+    el(g,'line',{x1:D[0]-24,y1:D[1],x2:D[0]+24,y2:D[1],stroke:css('--beam'),'stroke-width':3});
+    for(let i=-22;i<=16;i+=8) el(g,'line',{x1:D[0]+i,y1:D[1],x2:D[0]+i+8,y2:D[1]-11,stroke:css('--muted'),'stroke-width':1.4});
+  }
+  text(g,A[0]-26,A[1]+5,'A',{'font-weight':700,'font-size':16});
+  text(g,B[0]-26,B[1]+5,'B',{'font-weight':700,'font-size':16});
+  text(g,C[0]+10,C[1]+18,'C',{'font-weight':700,'font-size':16});
+  text(g,D[0]+14,D[1]+5,'D',{'font-weight':700,'font-size':16});
+}
+function dims(svg){
+  const m=css('--muted');
+  const v=(x,y1,y2,l)=>{el(svg,'line',{x1:x,y1:y1,x2:x,y2:y2,stroke:m,'stroke-width':1.3});[y1,y2].forEach(y=>el(svg,'line',{x1:x-5,y1:y,x2:x+5,y2:y,stroke:m,'stroke-width':1.3}));text(svg,x+7,(y1+y2)/2+5,l,{fill:m,'font-size':13,'font-weight':700});};
+  v(470,D[1],C[1],'2 m'); v(470,C[1],A[1],'4 m');
+  el(svg,'line',{x1:B[0],y1:A[1]+30,x2:C[0],y2:A[1]+30,stroke:m,'stroke-width':1.3});
+  [B[0],C[0]].forEach(x=>el(svg,'line',{x1:x,y1:A[1]+24,x2:x,y2:A[1]+36,stroke:m,'stroke-width':1.3}));
+  text(svg,(B[0]+C[0])/2-12,A[1]+24,'4 m',{fill:m,'font-size':13,'font-weight':700});
+}
+function loads(svg,op=1){
+  const g=el(svg,'g',{opacity:op});
+  for(let i=0;i<=8;i++){const y=B[1]+i*25; arrow(g,B[0]-34,y,B[0]-5,y,css('--load'),'',0,0,1.6);}
+  el(g,'line',{x1:B[0]-34,y1:B[1],x2:B[0]-34,y2:A[1],stroke:css('--load'),'stroke-width':1.6});
+  text(g,B[0]-120,(B[1]+A[1])/2,'w = 2 kN/m',{fill:css('--load'),'font-weight':700,'font-size':14});
+  const xm=(B[0]+C[0])/2; arrow(g,xm,B[1]-55,xm,B[1]-4,css('--load'),'P = 10 kN',xm+8,B[1]-40);
+}
+function memDiag(svg,name,pts,k,color,fill,labels=[]){
+  const [p0,p1,n]=MEM[name];
+  const at=t=>[p0[0]+(p1[0]-p0[0])*t, p0[1]+(p1[1]-p0[1])*t];
+  const poly=[at(0)];
+  pts.forEach(([t,m])=>{const q=at(t); poly.push([q[0]-m*k*n[0], q[1]-m*k*n[1]]);});
+  poly.push(at(1));
+  el(svg,'polygon',{points:poly.map(q=>q.join(',')).join(' '),fill:fill,stroke:color,'stroke-width':2.5,'stroke-linejoin':'round'});
+  labels.forEach(([t,m,txt,dx=0,dy=0])=>{const q=at(t); const x=q[0]-m*k*n[0], y=q[1]-m*k*n[1];
+    const ox = n[0]!==0 ? (-Math.sign(m)*n[0]*14) : 0, oy = n[1]!==0 ? (-Math.sign(m)*n[1]*16) : 0;
+    text(svg,x+ox-8+dx,y+oy+5+dy,txt,{fill:color,'font-weight':700,'font-size':14});});
+}
+const samp=(f,n=40)=>Array.from({length:n+1},(_,i)=>[i/n,f(i/n)]);
+
+// Figura
+const fig=document.getElementById('fig'); frame(fig); loads(fig); dims(fig);
+text(fig,250,350,'EI constante',{fill:css('--muted')});
+// Base
+const base=document.getElementById('base'); frame(base,{pin:false}); loads(base,.45);
+arrow(base,D[0]+4,D[1],D[0]+55,D[1],css('--m1'),'X₁',D[0]+40,D[1]-10);
+arrow(base,D[0],D[1]-4,D[0],D[1]-55,css('--m2'),'X₂',D[0]+8,D[1]-40);
+function couple(svg,color,label){ el(svg,'path',{d:`M${D[0]-26},${D[1]+14} A26,26 0 1 1 ${D[0]-22},${D[1]-18}`,fill:'none',stroke:color,'stroke-width':2.5});
+  el(svg,'path',{d:`M${D[0]-30},${D[1]-10} L${D[0]-22},${D[1]-18} L${D[0]-14},${D[1]-10}`,fill:'none',stroke:color,'stroke-width':2.5});
+  text(svg,D[0]-62,D[1]-20,label,{fill:color,'font-weight':700,'font-size':15}); }
+couple(base,css('--m3'),'X₃');
+// MP
+const dmp=document.getElementById('dmp'); frame(dmp,{pin:false,op:.45}); loads(dmp,.35);
+const kP=2.2;
+memDiag(dmp,'CB',[[0,0],[.5,0],[1,-20]],kP,css('--mp'),css('--amp'),[[1,-20,'20',8,0]]);
+memDiag(dmp,'BA',samp(t=>-20-(4*t)**2),kP,css('--mp'),css('--amp'),[[0,-20,'20',-6,-8],[.5,-24,'24',-34,-14],[1,-36,'36',-6,14]]);
+text(dmp,300,350,'MP (kN·m)',{fill:css('--mp'),'font-weight':700,'font-size':16});
+text(dmp,300,370,'DC = 0',{fill:css('--muted'),'font-size':13});
+// M1
+const k2=12;
+const dm1=document.getElementById('dm1'); frame(dm1,{pin:false,op:.45});
+arrow(dm1,D[0]+4,D[1],D[0]+50,D[1],css('--m1'),'1',D[0]+40,D[1]-10);
+memDiag(dm1,'DC',[[0,0],[1,-2]],k2,css('--m1'),css('--am1'),[[1,-2,'2',-4,-14]]);
+memDiag(dm1,'CB',[[0,-2],[1,-2]],k2,css('--m1'),css('--am1'),[[.5,-2,'2']]);
+memDiag(dm1,'BA',[[0,-2],[1,-6]],k2,css('--m1'),css('--am1'),[[0,-2,'2',-6,0],[1,-6,'6',-6,14]]);
+text(dm1,300,350,'M1 (m)',{fill:css('--m1'),'font-weight':700,'font-size':16});
+// M2
+const dm2=document.getElementById('dm2'); frame(dm2,{pin:false,op:.45});
+arrow(dm2,D[0],D[1]-4,D[0],D[1]-50,css('--m2'),'1',D[0]+8,D[1]-36);
+memDiag(dm2,'CB',[[0,0],[1,4]],k2,css('--m2'),css('--am2'),[[1,4,'4',10,0]]);
+memDiag(dm2,'BA',[[0,4],[1,4]],k2,css('--m2'),css('--am2'),[[.5,4,'4',4,0]]);
+text(dm2,300,370,'M2 (m)',{fill:css('--m2'),'font-weight':700,'font-size':16});
+text(dm2,300,390,'DC = 0',{fill:css('--muted'),'font-size':13});
+// M3
+const dm3=document.getElementById('dm3'); frame(dm3,{pin:false,op:.45});
+couple(dm3,css('--m3'),'1');
+const k3=14;
+memDiag(dm3,'DC',[[0,1],[1,1]],k3,css('--m3'),css('--am3'),[[.5,1,'1',4,0]]);
+memDiag(dm3,'CB',[[0,1],[1,1]],k3,css('--m3'),css('--am3'),[[.5,1,'1']]);
+memDiag(dm3,'BA',[[0,1],[1,1]],k3,css('--m3'),css('--am3'),[[.5,1,'1',4,0]]);
+text(dm3,300,370,'M3 = 1 (adim.)',{fill:css('--m3'),'font-weight':700,'font-size':16});
+text(dm3,300,390,'todo interior',{fill:css('--muted'),'font-size':13});
+// Final
+const X1=-79/20, X2=321/80, X3=-233/30;
+const Mdc=s=>-s*X1+X3, Mcb=s=>(s<2?0:-10*(s-2))-2*X1+s*X2+X3, Mba=s=>-20-s*s-(2+s)*X1+4*X2+X3;
+const dfin=document.getElementById('dfin'); frame(dfin,{op:.45}); loads(dfin,.3);
+const kf=7;
+const zdc=(-X3/(-X1))/2, zcb=3.3625/4;
+memDiag(dfin,'DC',[[0,X3],[zdc,0],[1,Mdc(2)]],kf,css('--fin'),css('--afin'),[[0,X3,'7.77',-16,6]]);
+memDiag(dfin,'CB',[[0,Mcb(0)],[.5,Mcb(2)],[zcb,0],[1,Mcb(4)]],kf,css('--fin'),css('--afin'),[[.5,Mcb(2),'8.16',0,4],[1,Mcb(4),'3.82',30,-2]]);
+memDiag(dfin,'BA',samp(t=>Mba(4*t),80),kf,css('--fin'),css('--afin'),[[1,Mba(4),'4.02',-14,14],[.4935,Mba(1.974),'+0.08',30,0]]);
+text(dfin,C[0]+10,C[1]-10,'0.13',{fill:css('--fin'),'font-weight':700,'font-size':13});
+text(dfin,300,400,'M final (kN·m)',{fill:css('--fin'),'font-weight':700,'font-size':16});
+</script>
+</body>
+</html>
